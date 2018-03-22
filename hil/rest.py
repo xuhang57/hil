@@ -89,7 +89,7 @@ class ValidationError(APIError):
     """An exception indicating that the body of the request was invalid."""
 
 
-def rest_call(methods, path, schema, dont_log=()):
+def rest_call(methods, path, schema, version={'version': 'v0'}, dont_log=()):
     """A decorator which registers an http mapping to a python api call.
 
     `rest_call` makes no modifications to the function itself, though the
@@ -176,13 +176,13 @@ def rest_call(methods, path, schema, dont_log=()):
 
         app.add_url_rule(path,
                          f.__name__,
-                         _rest_wrapper(f, schema, dont_log),
+                         _rest_wrapper(f, version, schema, dont_log),
                          methods=meths)
         return f
     return register
 
 
-def _do_validation(schema, kwargs):
+def _do_validation(version, schema, kwargs):
     """Validate the current request against `schema`.
 
     `schema` should be a schema as passed to `rest_call`.
@@ -215,6 +215,9 @@ def _do_validation(schema, kwargs):
                 raise ValidationError("Empty parameter specified")
             else:
                 final_kwargs[key] = value
+        print version
+        if version['version'] != 'v0':
+            raise ValidationError("API version does not match")
     else:
         # Methods other than GET can use path and body arguments
         if flask.request.data != '':
@@ -243,9 +246,12 @@ def _do_validation(schema, kwargs):
         # which, while fairly clear and helpful, is obviously
         # talking about python types, which is gross.
         raise validation_error
+    print version
+    if version['version'] != "v0":
+        raise validation_error
 
 
-def _rest_wrapper(f, schema, dont_log):
+def _rest_wrapper(f, version, schema, dont_log):
     """Return a wrapper around `f` that does the following:
 
     * Validate the current request against the schema.
@@ -260,7 +266,7 @@ def _rest_wrapper(f, schema, dont_log):
 
     def wrapper(**kwargs):
         """The wrapper described above."""
-        kwargs = _do_validation(schema, kwargs)
+        kwargs = _do_validation(version, schema, kwargs)
 
         censored_kwargs = kwargs.copy()
         for argname in dont_log:

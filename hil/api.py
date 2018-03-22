@@ -1135,7 +1135,8 @@ def show_networking_action(status_id):
     return json.dumps(action_info)
 
 
-@rest_call('GET', '/nodes/<is_free>', Schema({'is_free': basestring}))
+@rest_call('GET', '/nodes/<is_free>', Schema({
+    'is_free': basestring}), {'version': 'v1'})
 def list_nodes(is_free):
     """List all nodes or all free nodes
 
