@@ -22,6 +22,7 @@ from uuid import uuid4
 from hil import auth
 
 local = flask.g
+VERSION = 'v0'
 
 
 class _RequestInfo(object):
@@ -195,7 +196,6 @@ def _do_validation(version, schema, kwargs):
     If the schema does not validate, this will raise an instance of
     `ValidationError`.
     """
-
     final_kwargs = {}
 
     if flask.request.method == "GET":
@@ -215,8 +215,9 @@ def _do_validation(version, schema, kwargs):
                 raise ValidationError("Empty parameter specified")
             else:
                 final_kwargs[key] = value
+
         print version
-        if version['version'] != 'v0':
+        if version['version'] != VERSION:
             raise ValidationError("API version does not match")
     else:
         # Methods other than GET can use path and body arguments
@@ -234,6 +235,10 @@ def _do_validation(version, schema, kwargs):
             raise validation_error
         final_kwargs[k] = kwargs[k]
 
+    print version
+    if version['version'] != VERSION:
+        raise ValidationError("API version does not match")
+
     try:
         return schema.validate(final_kwargs)
     except SchemaError:
@@ -245,9 +250,6 @@ def _do_validation(version, schema, kwargs):
         #
         # which, while fairly clear and helpful, is obviously
         # talking about python types, which is gross.
-        raise validation_error
-    print version
-    if version['version'] != "v0":
         raise validation_error
 
 
