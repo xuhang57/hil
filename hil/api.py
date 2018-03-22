@@ -34,7 +34,8 @@ def list_projects():
     return json.dumps(projects)
 
 
-@rest_call('PUT', '/project/<project>', Schema({'project': basestring}))
+@rest_call('PUT', '/project/<project>', Schema({
+    'project': basestring}), {'version': 'v1'})
 def project_create(project):
     """Create a project.
 
