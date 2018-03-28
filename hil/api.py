@@ -34,8 +34,7 @@ def list_projects():
     return json.dumps(projects)
 
 
-@rest_call('PUT', '/project/<project>', Schema({
-    'project': basestring}), {'version': 'v1'})
+@rest_call('PUT', '/project/<project>', Schema({'project': basestring}))
 def project_create(project):
     """Create a project.
 
@@ -1141,8 +1140,7 @@ def show_networking_action(status_id):
     return json.dumps(action_info)
 
 
-@rest_call('GET', '/nodes/<is_free>', Schema({
-    'is_free': basestring}), {'version': 'v1'})
+@rest_call('GET', '/nodes/<is_free>', Schema({'is_free': basestring}))
 def list_nodes(is_free):
     """List all nodes or all free nodes
 
