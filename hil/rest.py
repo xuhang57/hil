@@ -163,7 +163,7 @@ def rest_call(methods, path, schema, dont_log=()):
         * A tuple, whose first element is a string (the response body), and
           whose second is an integer (the status code).
     """
-    
+
     def register(f):
         """Return value from rest call; this decorates the function itself."""
 
