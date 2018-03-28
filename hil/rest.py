@@ -22,7 +22,6 @@ from uuid import uuid4
 from hil import auth
 
 local = flask.g
-VERSION = 'v0'
 
 
 class _RequestInfo(object):
@@ -90,7 +89,7 @@ class ValidationError(APIError):
     """An exception indicating that the body of the request was invalid."""
 
 
-def rest_call(methods, path, schema, version={'version': 'v0'}, dont_log=()):
+def rest_call(methods, path, schema, dont_log=()):
     """A decorator which registers an http mapping to a python api call.
 
     `rest_call` makes no modifications to the function itself, though the
@@ -164,6 +163,7 @@ def rest_call(methods, path, schema, version={'version': 'v0'}, dont_log=()):
         * A tuple, whose first element is a string (the response body), and
           whose second is an integer (the status code).
     """
+    
     def register(f):
         """Return value from rest call; this decorates the function itself."""
 
@@ -175,15 +175,17 @@ def rest_call(methods, path, schema, version={'version': 'v0'}, dont_log=()):
         else:
             meths = [methods]
 
-        app.add_url_rule(path,
+        # Add REST API version
+        versioned_path = "/v0" + path
+        app.add_url_rule(versioned_path,
                          f.__name__,
-                         _rest_wrapper(f, version, schema, dont_log),
+                         _rest_wrapper(f, schema, dont_log),
                          methods=meths)
         return f
     return register
 
 
-def _do_validation(version, schema, kwargs):
+def _do_validation(schema, kwargs):
     """Validate the current request against `schema`.
 
     `schema` should be a schema as passed to `rest_call`.
@@ -216,9 +218,6 @@ def _do_validation(version, schema, kwargs):
             else:
                 final_kwargs[key] = value
 
-        print version
-        if version['version'] != VERSION:
-            raise ValidationError("API version does not match")
     else:
         # Methods other than GET can use path and body arguments
         if flask.request.data != '':
@@ -235,10 +234,6 @@ def _do_validation(version, schema, kwargs):
             raise validation_error
         final_kwargs[k] = kwargs[k]
 
-    print version
-    if version['version'] != VERSION:
-        raise ValidationError("API version does not match")
-
     try:
         return schema.validate(final_kwargs)
     except SchemaError:
@@ -253,7 +248,7 @@ def _do_validation(version, schema, kwargs):
         raise validation_error
 
 
-def _rest_wrapper(f, version, schema, dont_log):
+def _rest_wrapper(f, schema, dont_log):
     """Return a wrapper around `f` that does the following:
 
     * Validate the current request against the schema.
@@ -268,7 +263,7 @@ def _rest_wrapper(f, version, schema, dont_log):
 
     def wrapper(**kwargs):
         """The wrapper described above."""
-        kwargs = _do_validation(version, schema, kwargs)
+        kwargs = _do_validation(schema, kwargs)
 
         censored_kwargs = kwargs.copy()
         for argname in dont_log:
