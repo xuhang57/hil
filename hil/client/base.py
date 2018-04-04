@@ -48,7 +48,7 @@ class ClientBase(object):
         """Generate URL from combining endpoint and args as relative URL"""
         rel = "/".join(args)
         # Add HIL REST API version
-        rel = "/v0/" + rel
+        rel = "/v0" + rel
         url = urljoin(self.endpoint, rel)
         return url
 
